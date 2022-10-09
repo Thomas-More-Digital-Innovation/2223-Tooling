@@ -19,7 +19,7 @@
 </script>
 
 <div class="grow">
-	<div class="py-4 px-8 max-w-md">
+	<div class="py-4 px-8 max-w-lg mx-auto">
 		<h1 class="text-2xl font-bold">Settings</h1>
 		<form class="flex flex-col gap-4" on:submit={saveSettings}>
 			<div class="form-control w-full max-w-md">

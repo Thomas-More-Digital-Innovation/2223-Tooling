@@ -4,7 +4,7 @@
 	export const drawerState = writable(false);
 </script>
 
-<script>
+<script lang="ts">
 	export const prerender = true;
 
 	import '../app.css';
@@ -72,9 +72,13 @@
 					<span class="text-xl font-bold">Digital Innovation Tools</span>
 				</div>
 			</li>
-			<li><a href="/">Home</a></li>
-			<li><a href="/generate-scaffolded-project">Generate scaffolded project</a></li>
-			<li><a href="/settings">Settings</a></li>
+			<li><a href="/" on:click={() => drawerState.set(false)}>Home</a></li>
+			<li>
+				<a href="/generate-scaffolded-project" on:click={() => drawerState.set(false)}
+					>Generate scaffolded project</a
+				>
+			</li>
+			<li><a href="/settings" on:click={() => drawerState.set(false)}>Settings</a></li>
 		</ul>
 	</div>
 </div>
