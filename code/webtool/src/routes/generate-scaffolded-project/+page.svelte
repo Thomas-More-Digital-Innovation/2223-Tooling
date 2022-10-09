@@ -4,6 +4,8 @@
 	import { onMount } from 'svelte';
 	import type { RestEndpointMethodTypes } from '@octokit/rest';
 
+	const organization = 'Thomas-More-Digital-Innovation';
+
 	let gitHubOrganizationMembers: RestEndpointMethodTypes['orgs']['listMembers']['response']['data'] =
 		[];
 	let gitHubOrganizationRepos: RestEndpointMethodTypes['repos']['listForOrg']['response']['data'] =
@@ -20,9 +22,7 @@
 	let inputProjectSummary = '';
 	let inputTemplate = 'None';
 	let inputRepositoryPublic = false;
-	let inputTeamMembers: { [key: string]: boolean } = {
-		jonasclaes: true
-	};
+	let inputTeamMembers: { [key: string]: boolean } = {};
 
 	onMount(() => {
 		client = new Octokit({
@@ -31,7 +31,7 @@
 
 		client.rest.orgs
 			.listMembers({
-				org: 'Thomas-More-Digital-Innovation'
+				org: organization
 			})
 			.then((res) => {
 				gitHubOrganizationMembers = res.data;
@@ -39,7 +39,7 @@
 
 		client.rest.repos
 			.listForOrg({
-				org: 'Thomas-More-Digital-Innovation'
+				org: organization
 			})
 			.then((res) => {
 				gitHubOrganizationRepos = res.data;
@@ -70,20 +70,51 @@
 
 		try {
 			if (inputTemplate == 'None') {
-				await client.rest.repos.createInOrg({
-					org: 'Thomas-More-Digital-Innovation',
+				await client.repos.createInOrg({
+					org: organization,
 					name: repositoryName,
 					description: repositoryDescription,
 					visibility: inputRepositoryPublic ? 'public' : 'private'
 				});
 			} else {
-				await client.rest.repos.createUsingTemplate({
-					template_owner: 'Thomas-More-Digital-Innovation',
+				await client.repos.createUsingTemplate({
+					template_owner: organization,
 					template_repo: '2223-DI000-TemplateRepo',
-					owner: 'Thomas-More-Digital-Innovation',
+					owner: organization,
 					name: repositoryName,
 					description: repositoryDescription,
 					private: !inputRepositoryPublic
+				});
+			}
+
+			const maintainers = teamMembers
+				.map((member) =>
+					gitHubOrganizationMembers.findIndex((orgMember) => orgMember.login === member)
+				)
+				.filter((value) => value !== -1)
+				.map((value) => gitHubOrganizationMembers[value]);
+
+			await client.teams.create({
+				org: organization,
+				name: repositoryName,
+				privacy: 'closed',
+				repo_names: [`${organization}/${repositoryName}`]
+			});
+
+			await client.teams.addOrUpdateRepoPermissionsInOrg({
+				org: organization,
+				owner: organization,
+				repo: repositoryName,
+				team_slug: repositoryName,
+				permission: 'push'
+			});
+
+			for (const maintainer of maintainers) {
+				await client.teams.addOrUpdateMembershipForUserInOrg({
+					org: organization,
+					team_slug: repositoryName,
+					username: maintainer.login,
+					role: 'member'
 				});
 			}
 		} finally {
