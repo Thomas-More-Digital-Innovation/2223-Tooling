@@ -15,9 +15,9 @@
 	let step = 1;
 	let loading = false;
 
-	let inputAcademicYear = '2022-2023';
-	let inputProjectCode = 'DI-001';
-	let inputProjectSummary = 'Super handige DI tooling';
+	let inputAcademicYear = '';
+	let inputProjectCode = '';
+	let inputProjectSummary = '';
 	let inputTemplate = 'None';
 	let inputRepositoryPublic = false;
 	let inputTeamMembers: { [key: string]: boolean } = {
