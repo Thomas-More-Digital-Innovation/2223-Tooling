@@ -12,7 +12,7 @@
 
 	let client: Octokit;
 
-	let step = 3;
+	let step = 1;
 	let loading = false;
 
 	let inputAcademicYear = '2022-2023';
