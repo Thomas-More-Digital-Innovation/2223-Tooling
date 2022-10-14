@@ -1,0 +1,30 @@
+{
+  "name": "dinobot",
+  "version": "1.0.0",
+  "description": "DinoBot is an integration for the DI Tooling",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Thomas-More-Digital-Innovation/2223-Tooling.git"
+  },
+  "keywords": [
+    "Tooling, Digital Innovation, Thomas More"
+  ],
+  "author": "Nick Bulen <nick.bulen@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Thomas-More-Digital-Innovation/2223-Tooling/issues"
+  },
+  "homepage": "https://github.com/Thomas-More-Digital-Innovation/2223-Tooling#readme",
+  "dependencies": {
+    "discord.js": "^14.6.0",
+    "dotenv": "^16.0.3"
+  },
+  "devDependencies": {
+    "eslint": "^8.25.0",
+    "nodemon": "^2.0.20"
+  }
+}
