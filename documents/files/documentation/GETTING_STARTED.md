@@ -1,3 +1,11 @@
+---
+title: "Getting started"
+author: Jonas Claes
+date: October 15, 2022
+geometry: margin=2cm
+output: pdf_document
+---
+
 # Getting started
 
 This document explains how to create a new repository, including a team and a new project.
