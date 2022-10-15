@@ -1,0 +1,23 @@
+query GetOrganizationMembersAndRepositories($organizationName: String!) {
+	organization(login: $organizationName) {
+		membersWithRole(first: 100) {
+			edges {
+				node {
+					login
+					url
+					avatarUrl
+					name
+				}
+			}
+		}
+
+		repositories(first: 100) {
+			edges {
+				node {
+					name
+					isTemplate
+				}
+			}
+		}
+	}
+}
