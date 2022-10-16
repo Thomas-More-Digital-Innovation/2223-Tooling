@@ -1,7 +1,7 @@
 // Require the necessary discord.js classes
 const fs = require('node:fs');
 const path = require('node:path');
-const { Client, GatewayIntentBits, Collection, EmbedBuilder, WebhookClient } = require('discord.js');
+const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const { token } = require('./config.json');
 // Create a new client instance
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -37,36 +37,36 @@ client.on('interactionCreate', async interaction => {
 });
 
 
-// When the client is ready, run this code (only once)
-const embed = new EmbedBuilder()
-	.setTitle('Bot is online!')
-	.setColor(0xd2a575);
+// // When the client is ready, run this code (only once)
+// const embed = new EmbedBuilder()
+// 	.setTitle('Bot is online!')
+// 	.setColor(0xd2a575);
 
-const webhookClient = new WebhookClient({ url: 'https://discord.com/api/webhooks/1030564598690091098/e8DPjRccqtaqYIJmCGWwfZJDNgrgHogZ4-YrGuC8D2O01PLQ8AtBOQuJwHqOGwEO37Co/github' });
+// const webhookClient = new WebhookClient({ url: 'https://discord.com/api/webhooks/1030564598690091098/e8DPjRccqtaqYIJmCGWwfZJDNgrgHogZ4-YrGuC8D2O01PLQ8AtBOQuJwHqOGwEO37Co/github' });
 
-const main = async () => {
-	const message = await webhookClient.editMessage('1030564598690091098', {
-		username: 'DinoHook',
-		embeds: [embed],
-	});
-};
-main();
+// const main = async () => {
+// 	const message = await webhookClient.editMessage('1030564598690091098', {
+// 		username: 'DinoHook',
+// 		embeds: [embed],
+// 	});
+// };
+// main();
 
 client.once('ready', async () => {
 	console.log(`Logged in as ${client.user.tag}!`);
-	try {
+	// try {
 
-		if (!webhookClient) {
-			return console.log('No webhook was found that I can use!');
-		}
-		await webhookClient({
-			name: 'DinoHook',
-			embeds: [embed],
-		});
-	}
-	catch (error) {
-		console.error('Error trying to send a message: ', error);
-	}
+	// 	if (!webhookClient) {
+	// 		return console.log('No webhook was found that I can use!');
+	// 	}
+	// 	await webhookClient({
+	// 		name: 'DinoHook',
+	// 		embeds: [embed],
+	// 	});
+	// }
+	// catch (error) {
+	// 	console.error('Error trying to send a message: ', error);
+	// }
 });
 // Login to Discord with your client's token
 client.login(token);

@@ -21,7 +21,9 @@
   "homepage": "https://github.com/Thomas-More-Digital-Innovation/2223-Tooling#readme",
   "dependencies": {
     "discord.js": "^14.6.0",
-    "dotenv": "^16.0.3"
+    "dotenv": "^16.0.3",
+    "node-fetch": "^2.6.7",
+    "nodejs": "^0.0.0"
   },
   "devDependencies": {
     "eslint": "^8.25.0",
