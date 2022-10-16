@@ -1,0 +1,17 @@
+overwrite: true
+schema:
+  - https://api.github.com/graphql:
+      headers:
+        Authorization: Bearer <your token here>
+documents: './src/**/*.graphql'
+generates:
+  src/lib/graphql.ts:
+    plugins:
+      - typescript
+      - typescript-operations
+      - graphql-codegen-svelte-apollo
+  ./graphql.schema.json:
+    plugins:
+      - 'introspection'
+config:
+  clientPath: '$lib/gitHubClient'

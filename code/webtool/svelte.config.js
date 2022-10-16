@@ -1,4 +1,4 @@
-import adapter from '@sveltejs/adapter-static';
+import adapter from '@sveltejs/adapter-cloudflare';
 import preprocess from 'svelte-preprocess';
 
 /** @type {import('@sveltejs/kit').Config} */
@@ -10,12 +10,15 @@ const config = {
 	}),
 
 	kit: {
-		adapter: adapter({
-			pages: 'build',
-			assets: 'build',
-			fallback: null,
-			precompress: false
-		})
+		// Uncomment for @sveltejs/adapter-static
+		// adapter: adapter({
+		// 	pages: 'build',
+		// 	assets: 'build',
+		// 	fallback: null,
+		// 	precompress: false
+		// })
+
+		adapter: adapter()
 	}
 };
 

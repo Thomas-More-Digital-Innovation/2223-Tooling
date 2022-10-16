@@ -1,21 +1,29 @@
 <script lang="ts">
+	import { GetOrganizationMembersAndRepositories } from '$lib/graphql';
 	import { settingStore } from '$lib/settingStore';
 	import { Octokit } from '@octokit/rest';
-	import { onMount } from 'svelte';
-	import type { RestEndpointMethodTypes } from '@octokit/rest';
 
 	const organization = 'Thomas-More-Digital-Innovation';
 
-	let gitHubOrganizationMembers: RestEndpointMethodTypes['orgs']['listMembers']['response']['data'] =
-		[];
-	let gitHubOrganizationRepos: RestEndpointMethodTypes['repos']['listForOrg']['response']['data'] =
-		[];
-	$: gitHubOrganizationTemplateRepos = gitHubOrganizationRepos.filter((repo) => repo.is_template);
-
 	let client: Octokit;
+
+	$: gitHubOrganizationMembersQuery = GetOrganizationMembersAndRepositories({
+		variables: {
+			organizationName: organization
+		}
+	});
+
+	$: gitHubOrganizationMembers =
+		$gitHubOrganizationMembersQuery.data.organization?.membersWithRole.edges || [];
+	$: gitHubOrganizationRepositories =
+		$gitHubOrganizationMembersQuery.data.organization?.repositories.edges || [];
+	$: gitHubOrganizationTemplateRepositories =
+		gitHubOrganizationRepositories.filter((repository) => repository?.node?.isTemplate) || [];
 
 	let step = 1;
 	let loading = false;
+	let success = false;
+	let error: string | null = null;
 
 	let inputAcademicYear = '';
 	let inputProjectCode = '';
@@ -23,28 +31,6 @@
 	let inputTemplate = 'None';
 	let inputRepositoryPublic = false;
 	let inputTeamMembers: { [key: string]: boolean } = {};
-
-	onMount(() => {
-		client = new Octokit({
-			auth: $settingStore.GitHubPersonalAccessToken
-		});
-
-		client.rest.orgs
-			.listMembers({
-				org: organization
-			})
-			.then((res) => {
-				gitHubOrganizationMembers = res.data;
-			});
-
-		client.rest.repos
-			.listForOrg({
-				org: organization
-			})
-			.then((res) => {
-				gitHubOrganizationRepos = res.data;
-			});
-	});
 
 	$: yearCode = inputAcademicYear
 		.split('-')
@@ -56,7 +42,15 @@
 	$: repositoryDescription = `Project ${inputAcademicYear} ${projectCodeSafe}: ${inputProjectSummary}`;
 	$: teamMembers = Object.entries(inputTeamMembers)
 		.filter((entry) => entry[1])
-		.map((entry) => entry[0]);
+		.map((entry) => gitHubOrganizationMembers.findIndex((edge) => edge?.node?.login == entry[0]))
+		.filter((v) => v !== -1 && v !== undefined && v !== null)
+		.map((v) => gitHubOrganizationMembers[v]);
+
+	settingStore.subscribe((newValue) => {
+		client = new Octokit({
+			auth: newValue.GitHubPersonalAccessToken
+		});
+	});
 
 	function submitNext(submitEvent: SubmitEvent) {
 		submitEvent.preventDefault();
@@ -87,13 +81,6 @@
 				});
 			}
 
-			const maintainers = teamMembers
-				.map((member) =>
-					gitHubOrganizationMembers.findIndex((orgMember) => orgMember.login === member)
-				)
-				.filter((value) => value !== -1)
-				.map((value) => gitHubOrganizationMembers[value]);
-
 			await client.teams.create({
 				org: organization,
 				name: repositoryName,
@@ -109,13 +96,19 @@
 				permission: 'push'
 			});
 
-			for (const maintainer of maintainers) {
+			for (const teamMember of teamMembers) {
 				await client.teams.addOrUpdateMembershipForUserInOrg({
 					org: organization,
 					team_slug: repositoryName,
-					username: maintainer.login,
+					username: teamMember?.node?.login || '',
 					role: 'member'
 				});
+			}
+
+			success = true;
+		} catch (err) {
+			if (err instanceof Error) {
+				error = err.message;
 			}
 		} finally {
 			loading = false;
@@ -124,7 +117,45 @@
 </script>
 
 <div class="grow">
-	<div class="py-4 px-8 max-w-lg mx-auto flex flex-col gap-4">
+	<div class="py-4 px-8 max-w-2xl mx-auto flex flex-col gap-4">
+		{#if success}
+			<div class="alert alert-success shadow-lg">
+				<div>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						class="stroke-current flex-shrink-0 h-6 w-6"
+						fill="none"
+						viewBox="0 0 24 24"
+						><path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+						/></svg
+					>
+					<span>Your repository and team have been generated!</span>
+				</div>
+			</div>
+		{/if}
+		{#if error}
+			<div class="alert alert-error shadow-lg">
+				<div>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						class="stroke-current flex-shrink-0 h-6 w-6"
+						fill="none"
+						viewBox="0 0 24 24"
+						><path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+						/></svg
+					>
+					<span>Error! {error}</span>
+				</div>
+			</div>
+		{/if}
 		<h1 class="text-2xl font-bold">Generate scaffolded project</h1>
 		<ul class="steps w-full">
 			<li class="step step-primary">Project info</li>
@@ -133,7 +164,7 @@
 		</ul>
 		{#if step == 1}
 			<form on:submit={submitNext}>
-				<div class="form-control w-full max-w-md">
+				<div class="form-control w-full">
 					<label class="label" for="academicYear">
 						<span class="label-text">Academic year?</span>
 					</label>
@@ -141,14 +172,14 @@
 						type="text"
 						id="academicYear"
 						placeholder="Type here"
-						class="input input-bordered w-full max-w-md"
+						class="input input-bordered w-full"
 						bind:value={inputAcademicYear}
 					/>
 					<label class="label" for="academicYear">
 						<span class="label-text-alt">Example: 2022-2023</span>
 					</label>
 				</div>
-				<div class="form-control w-full max-w-md">
+				<div class="form-control w-full">
 					<label class="label" for="projectCode">
 						<span class="label-text">Project code?</span>
 					</label>
@@ -156,7 +187,7 @@
 						type="text"
 						id="projectCode"
 						placeholder="Type here"
-						class="input input-bordered w-full max-w-md"
+						class="input input-bordered w-full"
 						bind:value={inputProjectCode}
 					/>
 					<label class="label" for="projectCode">
@@ -164,7 +195,7 @@
 						<span class="label-text-alt">Example: DI-001</span>
 					</label>
 				</div>
-				<div class="form-control w-full max-w-md">
+				<div class="form-control w-full">
 					<label class="label" for="projectSummary">
 						<span class="label-text">Project summary?</span>
 					</label>
@@ -172,7 +203,7 @@
 						type="text"
 						id="projectSummary"
 						placeholder="Type here"
-						class="input input-bordered w-full max-w-md"
+						class="input input-bordered w-full"
 						bind:value={inputProjectSummary}
 					/>
 					<label class="label" for="projectSummary">
@@ -182,14 +213,14 @@
 						>
 					</label>
 				</div>
-				<div class="form-control w-full max-w-md">
+				<div class="form-control w-full">
 					<label class="label" for="templateRepository">
 						<span class="label-text">Which template do you want to use?</span>
 					</label>
 					<select class="select select-bordered" id="templateRepository" bind:value={inputTemplate}>
 						<option selected>None</option>
-						{#each gitHubOrganizationTemplateRepos as repo}
-							<option>{repo.name}</option>
+						{#each gitHubOrganizationTemplateRepositories as repo}
+							<option>{repo?.node?.name}</option>
 						{/each}
 					</select>
 					<label class="label" for="templateRepository">
@@ -207,7 +238,7 @@
 					</label>
 				</div>
 				<div class="flex flex-col gap-2">
-					<button type="submit" class="btn btn-primary max-w-md">Next</button>
+					<button type="submit" class="btn btn-primary">Next</button>
 				</div>
 			</form>
 		{/if}
@@ -219,18 +250,23 @@
 						<div class="form-control">
 							<label class="label cursor-pointer">
 								<div class="flex flex-row gap-4 items-center">
-									<img src={member.avatar_url} alt={member.login} class="h-10" />
-									<a
-										class="label-text"
-										href={member.html_url}
-										target="_blank"
-										rel="noopener noreferrer">{member.login}</a
-									>
+									<img src={member?.node?.avatarUrl} alt={member?.node?.login} class="h-10" />
+									<div class="flex flex-col justify-center">
+										{#if member?.node?.name}
+											<span>{member?.node?.name}</span>
+										{/if}
+										<a
+											class="label-text"
+											href={member?.node?.url}
+											target="_blank"
+											rel="noopener noreferrer">{member?.node?.login}</a
+										>
+									</div>
 								</div>
 								<input
 									type="checkbox"
 									class="toggle"
-									bind:checked={inputTeamMembers[member.login]}
+									bind:checked={inputTeamMembers[member?.node?.login || '']}
 								/>
 							</label>
 						</div>
@@ -240,10 +276,8 @@
 					>
 				</div>
 				<div class="flex flex-col gap-2">
-					<button type="submit" class="btn btn-primary max-w-md">Next</button>
-					<button type="button" class="btn btn-ghost max-w-md" on:click={() => (step -= 1)}
-						>Back</button
-					>
+					<button type="submit" class="btn btn-primary">Next</button>
+					<button type="button" class="btn btn-ghost" on:click={() => (step -= 1)}>Back</button>
 				</div>
 			</form>
 		{/if}
@@ -265,30 +299,26 @@
 					</div>
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
 						<span class="block font-bold col-span-full">Repository access:</span>
-						{#each gitHubOrganizationMembers as member}
-							{#if teamMembers.indexOf(member.login) != -1}
-								<div class="flex flex-row gap-4 items-center">
-									<img src={member.avatar_url} alt={member.login} class="h-10" />
-									<a
-										class="label-text"
-										href={member.html_url}
-										target="_blank"
-										rel="noopener noreferrer">{member.login}</a
-									>
-								</div>
-							{/if}
+						{#each teamMembers as member}
+							<div class="flex flex-row gap-4 items-center">
+								<img src={member?.node?.avatarUrl} alt={member?.node?.login} class="h-10" />
+								<a
+									class="label-text"
+									href={member?.node?.url}
+									target="_blank"
+									rel="noopener noreferrer">{member?.node?.login}</a
+								>
+							</div>
 						{/each}
 					</div>
 					<div>
 						<span class="block font-bold">Repository visibility:</span>
 						<span class="block">{inputRepositoryPublic ? 'Public' : 'Private'}</span>
 					</div>
-					<button type="submit" class="btn btn-primary max-w-md" disabled={loading}
+					<button type="submit" class="btn btn-primary" disabled={loading}
 						>Generate scaffolded project</button
 					>
-					<button type="button" class="btn btn-ghost max-w-md" on:click={() => (step -= 1)}
-						>Back</button
-					>
+					<button type="button" class="btn btn-ghost" on:click={() => (step -= 1)}>Back</button>
 				</div>
 			</form>
 		{/if}
