@@ -13,11 +13,11 @@ module.exports = {
 		const embed = new EmbedBuilder()
 			.setTitle('COFFEEEEE!!!')
 			.setColor(0xd2a575)
-			.setImage('https://images.unsplash.com/photo-1541167760496-1628856ab772?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxMTc3M3wwfDF8c2VhcmNofDd8fGNvZmZlZXxlbnwwfHx8fDE2NjQwMTM2NDM&ixlib=rb-1.2.1&q=80&w=2000')
+			.setImage('https://imgur.com/QX6O7af')
 			.setDescription(`Coffee count: ${data.amountOfCoffees}`)
 			.setURL('https://jonasclaes.be/coffee-counter/')
 			.setAuthor({ name: 'Jonas Claes', iconURL: 'https://avatars.githubusercontent.com/u/25551249?v=4', url: 'https://jonasclaes.be/' })
-			.setThumbnail('https://images.unsplash.com/photo-1541167760496-1628856ab772?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwxMTc3M3wwfDF8c2VhcmNofDd8fGNvZmZlZXxlbnwwfHx8fDE2NjQwMTM2NDM&ixlib=rb-1.2.1&q=80&w=2000')
+			.setThumbnail('https://imgur.com/QX6O7af')
 			.setTimestamp()
 			.setFooter({ text: 'Designed By Nick', iconURL: 'https://avatars.githubusercontent.com/u/91118370?v=4' });
 
