@@ -1,5 +1,4 @@
 ---
-title: "Getting started"
 author: Jonas Claes
 date: October 15, 2022
 geometry: margin=2cm
