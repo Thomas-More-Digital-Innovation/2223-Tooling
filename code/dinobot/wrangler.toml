@@ -3,6 +3,3 @@ main = "src/index.ts"
 compatibility_date = "2022-10-16"
 node_compat = true
 
-services = [
-    { binding = "COFFEE_COUNTER_WORKER", service = "tm-coffeecounter", environment = "production" }
-]

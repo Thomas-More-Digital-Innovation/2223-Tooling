@@ -4,12 +4,14 @@ import { APIInteraction, APIInteractionResponse, InteractionResponseType, Intera
 import { ICommand } from "./commands/ICommand";
 import { UserCommand } from "./commands/UserCommand";
 import { CoffeeCommand } from "./commands/CoffeeCommand";
+import { KeyCommand } from "./commands/KeyCommand";
 
 export const registeredCommands: {[key: string]: ICommand} = {};
 
 // Commands
 registeredCommands[UserCommand.definition.name.toLowerCase()] = UserCommand;
 registeredCommands[CoffeeCommand.definition.name.toLowerCase()] = CoffeeCommand;
+registeredCommands[KeyCommand.definition.name.toLowerCase()] = KeyCommand;
 
 class JsonResponse extends Response {
     constructor(body: APIInteractionResponse, init?: any) {
