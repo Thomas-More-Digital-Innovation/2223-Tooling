@@ -1,0 +1,17 @@
+{
+  "name": "dinobot",
+  "version": "0.0.0",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^3.17.0",
+    "discord-api-types": "^0.37.14",
+    "discord-interactions": "^3.2.0",
+    "itty-router": "^2.6.6",
+    "typescript": "^4.8.4",
+    "wrangler": "2.1.11"
+  },
+  "private": true,
+  "scripts": {
+    "start": "wrangler dev",
+    "deploy": "wrangler publish"
+  }
+}
