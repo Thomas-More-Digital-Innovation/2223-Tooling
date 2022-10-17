@@ -12,6 +12,6 @@
   "private": true,
   "scripts": {
     "start": "wrangler dev",
-    "deploy": "wrangler publish src/index.ts --compatibility-date 2022-10-16 --node-compat --name dinobot"
+    "deploy": "wrangler publish --config wrangler.prod.toml"
   }
 }
