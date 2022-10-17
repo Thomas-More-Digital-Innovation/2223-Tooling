@@ -5,9 +5,17 @@ export const CoffeeCommand: ICommand = {
     name: 'coffee',
     description: 'Replies with coffee!',
     handler: async (interaction, env) => {
-        const coffeeCounterResponse = await env.COFFEE_COUNTER_WORKER.fetch("https://tm-coffeecounter.jonasclaesbe.workers.dev/api/coffee-count");
-        const coffeeCounterData: { amountOfCoffees: number } = await coffeeCounterResponse.json();
+        let amountOfCoffees = 0;
 
+        if (env.COFFEE_COUNTER_WORKER) {
+            const coffeeCounterResponse = await env.COFFEE_COUNTER_WORKER.fetch("https://tm-coffeecounter.jonasclaesbe.workers.dev/api/coffee-count");
+            const coffeeCounterData: { amountOfCoffees: number } = await coffeeCounterResponse.json();
+            amountOfCoffees = coffeeCounterData.amountOfCoffees;
+        } else {
+            const coffeeCounterResponse = await fetch("https://tm-coffeecounter.jonasclaesbe.workers.dev/api/coffee-count");
+            const coffeeCounterData: { amountOfCoffees: number } = await coffeeCounterResponse.json();
+            amountOfCoffees = coffeeCounterData.amountOfCoffees;
+        }
 
         const embed: APIEmbed = {
             title: "COFFEEEEE!!!",
@@ -15,7 +23,7 @@ export const CoffeeCommand: ICommand = {
             image: {
                 url: "https://imgur.com/QX6O7af.jpg"
             },
-            description: `Coffee count: ${coffeeCounterData.amountOfCoffees}`,
+            description: `Coffee count: ${amountOfCoffees}`,
             url: "https://jonasclaes.be/coffee-counter/",
             author: {
                 name: "Jonas Claes",

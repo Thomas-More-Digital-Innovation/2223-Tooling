@@ -18,7 +18,7 @@ export interface Env {
 	DISCORD_PUBLIC_KEY: string;
 	DISCORD_APPLICATION_ID: string;
 
-	COFFEE_COUNTER_WORKER: ServiceWorkerGlobalScope;
+	COFFEE_COUNTER_WORKER?: ServiceWorkerGlobalScope;
 
 	// Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
 	// MY_KV_NAMESPACE: KVNamespace;
