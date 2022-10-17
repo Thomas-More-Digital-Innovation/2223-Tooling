@@ -30,7 +30,7 @@ export const GET: RequestHandler = async ({ platform }) => {
 				}
 			`,
 			{
-                organizationName: "Thomas-More-Digital-Innovation",
+				organizationName: 'Thomas-More-Digital-Innovation',
 				headers: {
 					authorization: `Bearer ${platform.env.GH_TOKEN}`
 				}
@@ -40,7 +40,7 @@ export const GET: RequestHandler = async ({ platform }) => {
 		return new Response(
 			JSON.stringify({
 				status: 'OK',
-                data: gitHubOrganizationMembersQuery
+				data: gitHubOrganizationMembersQuery
 			}),
 			{
 				status: 200,

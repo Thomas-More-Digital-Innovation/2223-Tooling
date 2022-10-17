@@ -35,15 +35,20 @@
 	$: repositoryDescription = `Project ${inputAcademicYear} ${projectCodeSafe}: ${inputProjectSummary}`;
 	$: teamMembers = Object.entries(inputTeamMembers)
 		.filter((entry) => entry[1])
-		.map((entry) => gitHubOrganizationMembers.findIndex((edge: any) => edge?.node?.login == entry[0]))
+		.map((entry) =>
+			gitHubOrganizationMembers.findIndex((edge: any) => edge?.node?.login == entry[0])
+		)
 		.filter((v) => v !== -1 && v !== undefined && v !== null)
 		.map((v) => gitHubOrganizationMembers[v]);
 
 	onMount(async () => {
-		const getOrganizationMembersAndRepositoriesResponse = await fetch('/api/get-organization-members-and-repositories');
-		
+		const getOrganizationMembersAndRepositoriesResponse = await fetch(
+			'/api/get-organization-members-and-repositories'
+		);
+
 		if (getOrganizationMembersAndRepositoriesResponse.ok) {
-			const getOrganizationMembersAndRepositoriesData = await getOrganizationMembersAndRepositoriesResponse.json();
+			const getOrganizationMembersAndRepositoriesData =
+				await getOrganizationMembersAndRepositoriesResponse.json();
 			gitHubOrganizationMembersQuery.set({ data: getOrganizationMembersAndRepositoriesData.data });
 		}
 	});
