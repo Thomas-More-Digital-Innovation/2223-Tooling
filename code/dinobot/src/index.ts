@@ -1,5 +1,7 @@
+import { Webhooks } from '@octokit/webhooks';
 import { verifyKey } from 'discord-interactions';
 import { Request as IttyRequest, Router } from 'itty-router';
+import { teamCreatedHandler } from './handlers/github/teamCreate';
 import { registerDiscordHandler } from './handlers/register/discord';
 import { webhookDiscordHandler } from './handlers/webhook/discord';
 
@@ -42,16 +44,16 @@ router
 
 export default {
 	/**
-   * Every request to a worker will start in the `fetch` method.
-   * Verify the signature with the request, and dispatch to the router.
-   * @param {*} request A Fetch Request object
-   * @param {*} env A map of key/value pairs with env vars and secrets from the cloudflare env.
-   * @returns
-   */
+	* Every request to a worker will start in the `fetch` method.
+	* Verify the signature with the request, and dispatch to the router.
+	* @param {*} request A Fetch Request object
+	* @param {*} env A map of key/value pairs with env vars and secrets from the cloudflare env.
+	* @returns
+	*/
 	async fetch(request: Request, env: Env) {
 		const url = new URL(request.url);
 		if (request.method === 'POST' && url.pathname === '/webhook/discord') {
-			// Using the incoming headers, verify this request actually came from discord.
+			// Using the incoming headers, verify this request actually came from Discord.
 			const signature = request.headers.get('x-signature-ed25519');
 			const timestamp = request.headers.get('x-signature-timestamp');
 			// console.log(signature, timestamp, env.DISCORD_PUBLIC_KEY);
@@ -66,6 +68,37 @@ export default {
 				console.error('Invalid Request');
 				return new Response('Bad request signature.', { status: 401 });
 			}
+		}
+
+		if (request.method === 'POST' && url.pathname === '/webhook/github') {
+			// Using the incoming headers, verify this request actually came from GitHub.
+			const githubDeliveryId = request.headers.get('x-github-delivery');
+			const githubEventName = request.headers.get('x-github-event');
+			const githubSignature = request.headers.get('x-hub-signature-256');
+
+			const body = await request.json();
+
+			const webhook = new Webhooks({
+				secret: "mysecret",
+			});
+			
+			webhook.on("team.created", teamCreatedHandler);
+
+			await webhook.verifyAndReceive({
+				// @ts-ignore
+				id: githubDeliveryId,
+				// @ts-ignore
+				name: githubEventName,
+				// @ts-ignore
+				payload: body,
+				// @ts-ignore
+				signature: githubSignature
+			}).catch(err => {
+				console.error('Invalid Request');
+				return new Response('Bad request signature.', { status: 401 });
+			});
+
+			return new Response("OK", { status: 200 });
 		}
 
 		// Dispatch the request to the appropriate route
