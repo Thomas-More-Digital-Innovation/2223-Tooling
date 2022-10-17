@@ -6,9 +6,15 @@
 
 	const organization = 'Thomas-More-Digital-Innovation';
 
-	const gitHubOrganizationMembers = writable<RestEndpointMethodTypes["orgs"]["listMembers"]["response"]["data"]>([]);
-	const gitHubOrganizationRepositories = writable<RestEndpointMethodTypes["repos"]["listForOrg"]["response"]["data"]>([]);
-	$: gitHubOrganizationTemplateRepositories = $gitHubOrganizationRepositories.filter((repository) => repository.is_template);
+	const gitHubOrganizationMembers = writable<
+		RestEndpointMethodTypes['orgs']['listMembers']['response']['data']
+	>([]);
+	const gitHubOrganizationRepositories = writable<
+		RestEndpointMethodTypes['repos']['listForOrg']['response']['data']
+	>([]);
+	$: gitHubOrganizationTemplateRepositories = $gitHubOrganizationRepositories.filter(
+		(repository) => repository.is_template
+	);
 
 	let step = 1;
 	let loading = false;
@@ -32,9 +38,9 @@
 	$: repositoryDescription = `Project ${inputAcademicYear} ${projectCodeSafe}: ${inputProjectSummary}`;
 	$: teamMembers = Object.entries(inputTeamMembers)
 		.filter((entry) => entry[1])
-		.map(entry => $gitHubOrganizationMembers.findIndex(member => member.login === entry[0]))
-		.filter(member => member != -1)
-		.map(v => $gitHubOrganizationMembers[v]);
+		.map((entry) => $gitHubOrganizationMembers.findIndex((member) => member.login === entry[0]))
+		.filter((member) => member != -1)
+		.map((v) => $gitHubOrganizationMembers[v]);
 
 	onMount(async () => {
 		const getOrganizationMembersAndRepositoriesResponse = await fetch(
@@ -44,9 +50,11 @@
 		if (getOrganizationMembersAndRepositoriesResponse.ok) {
 			const getOrganizationMembersAndRepositoriesData =
 				await getOrganizationMembersAndRepositoriesResponse.json();
-			
+
 			gitHubOrganizationMembers.set(getOrganizationMembersAndRepositoriesData.data.members);
-			gitHubOrganizationRepositories.set(getOrganizationMembersAndRepositoriesData.data.repositories);
+			gitHubOrganizationRepositories.set(
+				getOrganizationMembersAndRepositoriesData.data.repositories
+			);
 		}
 	});
 
@@ -275,11 +283,8 @@
 						{#each teamMembers as member}
 							<div class="flex flex-row gap-4 items-center">
 								<img src={member.avatar_url} alt={member.login} class="h-10" />
-								<a
-									class="label-text"
-									href={member.url}
-									target="_blank"
-									rel="noopener noreferrer">{member.login}</a
+								<a class="label-text" href={member.url} target="_blank" rel="noopener noreferrer"
+									>{member.login}</a
 								>
 							</div>
 						{/each}

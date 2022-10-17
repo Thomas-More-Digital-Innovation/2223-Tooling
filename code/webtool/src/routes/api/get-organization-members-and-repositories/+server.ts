@@ -6,11 +6,11 @@ export const GET: RequestHandler = async ({ platform }) => {
 		const client = getGitHubClient(platform.env.GH_TOKEN);
 
 		const members = await client.orgs.listMembers({
-			org: "Thomas-More-Digital-Innovation"
+			org: 'Thomas-More-Digital-Innovation'
 		});
 
 		const repositories = await client.repos.listForOrg({
-			org: "Thomas-More-Digital-Innovation"
+			org: 'Thomas-More-Digital-Innovation'
 		});
 
 		return new Response(
