@@ -56,7 +56,7 @@
 					/></svg
 				>
 				<p class="font-bold">
-					jonasclaes.be<br />Providing reliable software since the 21st century
+					jonasclaes.be<br />Providing reliable software since the 21<sup>st</sup> century
 				</p>
 				<p>Copyright © {new Date().getFullYear()} - All rights reserved</p>
 			</div>
