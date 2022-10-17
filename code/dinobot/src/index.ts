@@ -1,5 +1,5 @@
 import { Webhooks } from '@octokit/webhooks';
-import { APITextBasedChannel, APITextChannel, ChannelType, RESTPostAPIChannelMessageJSONBody, RESTPostAPIGuildChannelJSONBody, RouteBases, Routes } from 'discord-api-types/v10';
+import { APITextBasedChannel, ChannelType, RESTPostAPIChannelMessageJSONBody, RESTPostAPIGuildChannelJSONBody, RouteBases, Routes } from 'discord-api-types/v10';
 import { verifyKey } from 'discord-interactions';
 import { Request as IttyRequest, Router } from 'itty-router';
 import { registerDiscordHandler } from './handlers/register/discord';
@@ -113,7 +113,6 @@ export default {
 						method: 'POST',
 						body: JSON.stringify(sendMessage),
 					});
-
 					return response;
 				} 
 				const sendMessage: RESTPostAPIChannelMessageJSONBody = {
