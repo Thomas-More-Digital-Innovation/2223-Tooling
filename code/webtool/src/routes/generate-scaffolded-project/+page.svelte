@@ -1,24 +1,17 @@
 <script lang="ts">
-	import { GetOrganizationMembersAndRepositories } from '$lib/graphql';
-	import { settingStore } from '$lib/settingStore';
-	import { Octokit } from '@octokit/rest';
+	import { onMount } from 'svelte';
+	import { writable } from 'svelte/store';
+	import type { GenerateScaffoldedProjectData } from '../api/generate-scaffolded-project/+server';
 
 	const organization = 'Thomas-More-Digital-Innovation';
 
-	let client: Octokit;
-
-	$: gitHubOrganizationMembersQuery = GetOrganizationMembersAndRepositories({
-		variables: {
-			organizationName: organization
-		}
-	});
-
+	$: gitHubOrganizationMembersQuery = writable<any>({ data: { organization: null } });
 	$: gitHubOrganizationMembers =
 		$gitHubOrganizationMembersQuery.data.organization?.membersWithRole.edges || [];
 	$: gitHubOrganizationRepositories =
 		$gitHubOrganizationMembersQuery.data.organization?.repositories.edges || [];
 	$: gitHubOrganizationTemplateRepositories =
-		gitHubOrganizationRepositories.filter((repository) => repository?.node?.isTemplate) || [];
+		gitHubOrganizationRepositories.filter((repository: any) => repository?.node?.isTemplate) || [];
 
 	let step = 1;
 	let loading = false;
@@ -42,14 +35,17 @@
 	$: repositoryDescription = `Project ${inputAcademicYear} ${projectCodeSafe}: ${inputProjectSummary}`;
 	$: teamMembers = Object.entries(inputTeamMembers)
 		.filter((entry) => entry[1])
-		.map((entry) => gitHubOrganizationMembers.findIndex((edge) => edge?.node?.login == entry[0]))
+		.map((entry) => gitHubOrganizationMembers.findIndex((edge: any) => edge?.node?.login == entry[0]))
 		.filter((v) => v !== -1 && v !== undefined && v !== null)
 		.map((v) => gitHubOrganizationMembers[v]);
 
-	settingStore.subscribe((newValue) => {
-		client = new Octokit({
-			auth: newValue.GitHubPersonalAccessToken
-		});
+	onMount(async () => {
+		const getOrganizationMembersAndRepositoriesResponse = await fetch('/api/get-organization-members-and-repositories');
+		
+		if (getOrganizationMembersAndRepositoriesResponse.ok) {
+			const getOrganizationMembersAndRepositoriesData = await getOrganizationMembersAndRepositoriesResponse.json();
+			gitHubOrganizationMembersQuery.set({ data: getOrganizationMembersAndRepositoriesData.data });
+		}
 	});
 
 	function submitNext(submitEvent: SubmitEvent) {
@@ -63,49 +59,24 @@
 		loading = true;
 
 		try {
-			if (inputTemplate == 'None') {
-				await client.repos.createInOrg({
-					org: organization,
-					name: repositoryName,
-					description: repositoryDescription,
-					visibility: inputRepositoryPublic ? 'public' : 'private'
-				});
-			} else {
-				await client.repos.createUsingTemplate({
-					template_owner: organization,
-					template_repo: '2223-DI000-TemplateRepo',
-					owner: organization,
-					name: repositoryName,
-					description: repositoryDescription,
-					private: !inputRepositoryPublic
-				});
-			}
+			const data: GenerateScaffoldedProjectData = {
+				repositoryName,
+				repositoryDescription,
+				repositoryOrganization: organization,
+				repositoryVisibility: inputRepositoryPublic ? 'public' : 'private',
+				repostoryMembers: teamMembers.map((member) => member?.node?.login || ''),
+				repositoryTemplate: inputTemplate === 'None' ? undefined : inputTemplate
+			};
 
-			await client.teams.create({
-				org: organization,
-				name: repositoryName,
-				privacy: 'closed',
-				repo_names: [`${organization}/${repositoryName}`]
+			const response = await fetch('/api/generate-scaffolded-project', {
+				method: 'POST',
+				body: JSON.stringify(data),
+				headers: {
+					'Content-Type': 'application/json'
+				}
 			});
 
-			await client.teams.addOrUpdateRepoPermissionsInOrg({
-				org: organization,
-				owner: organization,
-				repo: repositoryName,
-				team_slug: repositoryName,
-				permission: 'push'
-			});
-
-			for (const teamMember of teamMembers) {
-				await client.teams.addOrUpdateMembershipForUserInOrg({
-					org: organization,
-					team_slug: repositoryName,
-					username: teamMember?.node?.login || '',
-					role: 'member'
-				});
-			}
-
-			success = true;
+			success = response.ok;
 		} catch (err) {
 			if (err instanceof Error) {
 				error = err.message;
