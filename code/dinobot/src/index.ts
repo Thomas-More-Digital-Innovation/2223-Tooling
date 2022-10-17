@@ -1,7 +1,7 @@
 import { Webhooks } from '@octokit/webhooks';
+import { APITextBasedChannel, APITextChannel, ChannelType, RESTPostAPIChannelMessageJSONBody, RESTPostAPIGuildChannelJSONBody, RouteBases, Routes } from 'discord-api-types/v10';
 import { verifyKey } from 'discord-interactions';
 import { Request as IttyRequest, Router } from 'itty-router';
-import { teamCreatedHandler } from './handlers/github/teamCreate';
 import { registerDiscordHandler } from './handlers/register/discord';
 import { webhookDiscordHandler } from './handlers/webhook/discord';
 
@@ -81,8 +81,46 @@ export default {
 			const webhook = new Webhooks({
 				secret: "mysecret",
 			});
-			
-			webhook.on("team.created", teamCreatedHandler);
+			webhook.on("team.created", async event => {
+				async function teamCreated(url: string, token: string, channelCreate: RESTPostAPIGuildChannelJSONBody): Promise<APITextBasedChannel<ChannelType.GuildText>> {
+					const response = await fetch(url, {
+						headers: {
+							'Content-Type': 'application/json',
+							Authorization: `Bot ${token}`,
+						},
+						method: 'POST',
+						body: JSON.stringify(channelCreate),
+					});
+
+					return await response.json();
+				}
+
+				console.log(event.payload.team.name)
+				const channelCreate: RESTPostAPIGuildChannelJSONBody = {
+					name: `${event.payload.team.name}`,
+					type: 0,
+					parent_id: "1031539075582275624",
+
+				};
+				const message = await teamCreated(RouteBases.api + Routes.guildChannels("1030526991788679218"), env.DISCORD_TOKEN, channelCreate);
+
+				async function teamMessage(url: string, token: string, sendMessage: RESTPostAPIChannelMessageJSONBody) {
+					const response = await fetch(url, {
+						headers: {
+							'Content-Type': 'application/json',
+							Authorization: `Bot ${token}`,
+						},
+						method: 'POST',
+						body: JSON.stringify(sendMessage),
+					});
+
+					return response;
+				} 
+				const sendMessage: RESTPostAPIChannelMessageJSONBody = {
+					content: `https://github.com/${event.payload.organization.login}/${event.payload.team.name}`,
+				};
+				await teamMessage(RouteBases.api + Routes.channelMessages(message.id), env.DISCORD_TOKEN, sendMessage);
+			});
 
 			await webhook.verifyAndReceive({
 				// @ts-ignore
