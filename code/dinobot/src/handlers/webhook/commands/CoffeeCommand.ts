@@ -2,8 +2,10 @@ import { APIEmbed } from "discord-api-types/v10";
 import { ICommand } from "./ICommand";
 
 export const CoffeeCommand: ICommand = {
-    name: 'coffee',
-    description: 'Replies with coffee!',
+    definition: {
+        name: 'coffee',
+        description: 'Replies with coffee!',
+    },
     handler: async (interaction, env) => {
         let amountOfCoffees = 0;
 

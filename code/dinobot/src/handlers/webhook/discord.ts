@@ -8,8 +8,8 @@ import { CoffeeCommand } from "./commands/CoffeeCommand";
 export const registeredCommands: {[key: string]: ICommand} = {};
 
 // Commands
-registeredCommands[UserCommand.name.toLowerCase()] = UserCommand;
-registeredCommands[CoffeeCommand.name.toLowerCase()] = CoffeeCommand;
+registeredCommands[UserCommand.definition.name.toLowerCase()] = UserCommand;
+registeredCommands[CoffeeCommand.definition.name.toLowerCase()] = CoffeeCommand;
 
 class JsonResponse extends Response {
     constructor(body: APIInteractionResponse, init?: any) {

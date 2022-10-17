@@ -24,11 +24,7 @@ export const registerDiscordHandler = async (req: Request, env: Env, ctx: Execut
 
     for (const commandKey of Object.keys(registeredCommands)) {
         const command = registeredCommands[commandKey];
-
-        commands.push({
-            name: command.name,
-            description: command.description
-        });
+        commands.push(command.definition);
     }
 
     const url = RouteBases.api + Routes.applicationGuildCommands(env.DISCORD_APPLICATION_ID, guildId);
