@@ -78,7 +78,6 @@
 					>Generate scaffolded project</a
 				>
 			</li>
-			<li><a href="/settings" on:click={() => drawerState.set(false)}>Settings</a></li>
 		</ul>
 	</div>
 </div>
