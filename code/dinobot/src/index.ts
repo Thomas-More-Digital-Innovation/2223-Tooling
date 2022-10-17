@@ -1,5 +1,6 @@
 import { verifyKey } from 'discord-interactions';
 import { Request as IttyRequest, Router } from 'itty-router';
+import { registerDiscordHandler } from './handlers/register/discord';
 import { webhookDiscordHandler } from './handlers/webhook/discord';
 
 /**
@@ -35,6 +36,7 @@ router
 	.get("/", (req, env, ctx) => {
 		return new Response("You've reached /", { status: 200 });
 	})
+	.get("/register/discord/:guildid", registerDiscordHandler)
 	.post("/webhook/discord", webhookDiscordHandler)
 	.get("*", (req: IttyRequest) => new Response("Not Found", { status: 404 }));
 

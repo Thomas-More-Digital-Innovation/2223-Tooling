@@ -3,7 +3,7 @@ import { ICommand } from "./ICommand";
 
 export const CoffeeCommand: ICommand = {
     name: 'coffee',
-    description: 'Replies with user info!',
+    description: 'Replies with coffee!',
     handler: async (interaction, env) => {
         const coffeeCounterResponse = await env.COFFEE_COUNTER_WORKER.fetch("https://tm-coffeecounter.jonasclaesbe.workers.dev/api/coffee-count");
         const coffeeCounterData: { amountOfCoffees: number } = await coffeeCounterResponse.json();
