@@ -1,46 +1,25 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { graphql } from '@octokit/graphql';
+import { getGitHubClient } from '$lib/gitHubClient';
 
 export const GET: RequestHandler = async ({ platform }) => {
 	try {
-		const gitHubOrganizationMembersQuery = await graphql(
-			`
-				query GetOrganizationMembersAndRepositories($organizationName: String!) {
-					organization(login: $organizationName) {
-						membersWithRole(first: 100) {
-							edges {
-								node {
-									login
-									url
-									avatarUrl
-									name
-								}
-							}
-						}
+		const client = getGitHubClient(platform.env.GH_TOKEN);
 
-						repositories(first: 100) {
-							edges {
-								node {
-									name
-									isTemplate
-								}
-							}
-						}
-					}
-				}
-			`,
-			{
-				organizationName: 'Thomas-More-Digital-Innovation',
-				headers: {
-					authorization: `Bearer ${platform.env.GH_TOKEN}`
-				}
-			}
-		);
+		const members = await client.orgs.listMembers({
+			org: "Thomas-More-Digital-Innovation"
+		});
+
+		const repositories = await client.repos.listForOrg({
+			org: "Thomas-More-Digital-Innovation"
+		});
 
 		return new Response(
 			JSON.stringify({
 				status: 'OK',
-				data: gitHubOrganizationMembersQuery
+				data: {
+					members: members.data,
+					repositories: repositories.data
+				}
 			}),
 			{
 				status: 200,

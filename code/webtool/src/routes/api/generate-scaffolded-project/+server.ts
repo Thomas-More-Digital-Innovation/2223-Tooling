@@ -1,5 +1,5 @@
 import type { RequestHandler } from '@sveltejs/kit';
-import { Octokit } from '@octokit/rest';
+import { getGitHubClient } from '$lib/gitHubClient';
 
 export interface GenerateScaffoldedProjectData {
 	repositoryName: string;
@@ -21,9 +21,7 @@ export const POST: RequestHandler = async ({ request, platform }) => {
 			repostoryMembers
 		} = await request.json();
 
-		const client = new Octokit({
-			auth: platform.env.GH_TOKEN
-		});
+		const client = getGitHubClient(platform.env.GH_TOKEN);
 
 		if (repositoryTemplate) {
 			await client.repos.createUsingTemplate({
