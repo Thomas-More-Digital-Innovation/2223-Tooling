@@ -1,24 +1,20 @@
 <script lang="ts">
-	import { GetOrganizationMembersAndRepositories } from '$lib/graphql';
-	import { settingStore } from '$lib/settingStore';
-	import { Octokit } from '@octokit/rest';
+	import type { RestEndpointMethodTypes } from '@octokit/rest';
+	import { onMount } from 'svelte';
+	import { writable } from 'svelte/store';
+	import type { GenerateScaffoldedProjectData } from '../api/generate-scaffolded-project/+server';
 
 	const organization = 'Thomas-More-Digital-Innovation';
 
-	let client: Octokit;
-
-	$: gitHubOrganizationMembersQuery = GetOrganizationMembersAndRepositories({
-		variables: {
-			organizationName: organization
-		}
-	});
-
-	$: gitHubOrganizationMembers =
-		$gitHubOrganizationMembersQuery.data.organization?.membersWithRole.edges || [];
-	$: gitHubOrganizationRepositories =
-		$gitHubOrganizationMembersQuery.data.organization?.repositories.edges || [];
-	$: gitHubOrganizationTemplateRepositories =
-		gitHubOrganizationRepositories.filter((repository) => repository?.node?.isTemplate) || [];
+	const gitHubOrganizationMembers = writable<
+		RestEndpointMethodTypes['orgs']['listMembers']['response']['data']
+	>([]);
+	const gitHubOrganizationRepositories = writable<
+		RestEndpointMethodTypes['repos']['listForOrg']['response']['data']
+	>([]);
+	$: gitHubOrganizationTemplateRepositories = $gitHubOrganizationRepositories.filter(
+		(repository) => repository.is_template
+	);
 
 	let step = 1;
 	let loading = false;
@@ -42,14 +38,24 @@
 	$: repositoryDescription = `Project ${inputAcademicYear} ${projectCodeSafe}: ${inputProjectSummary}`;
 	$: teamMembers = Object.entries(inputTeamMembers)
 		.filter((entry) => entry[1])
-		.map((entry) => gitHubOrganizationMembers.findIndex((edge) => edge?.node?.login == entry[0]))
-		.filter((v) => v !== -1 && v !== undefined && v !== null)
-		.map((v) => gitHubOrganizationMembers[v]);
+		.map((entry) => $gitHubOrganizationMembers.findIndex((member) => member.login === entry[0]))
+		.filter((member) => member != -1)
+		.map((v) => $gitHubOrganizationMembers[v]);
 
-	settingStore.subscribe((newValue) => {
-		client = new Octokit({
-			auth: newValue.GitHubPersonalAccessToken
-		});
+	onMount(async () => {
+		const getOrganizationMembersAndRepositoriesResponse = await fetch(
+			'/api/get-organization-members-and-repositories'
+		);
+
+		if (getOrganizationMembersAndRepositoriesResponse.ok) {
+			const getOrganizationMembersAndRepositoriesData =
+				await getOrganizationMembersAndRepositoriesResponse.json();
+
+			gitHubOrganizationMembers.set(getOrganizationMembersAndRepositoriesData.data.members);
+			gitHubOrganizationRepositories.set(
+				getOrganizationMembersAndRepositoriesData.data.repositories
+			);
+		}
 	});
 
 	function submitNext(submitEvent: SubmitEvent) {
@@ -63,49 +69,24 @@
 		loading = true;
 
 		try {
-			if (inputTemplate == 'None') {
-				await client.repos.createInOrg({
-					org: organization,
-					name: repositoryName,
-					description: repositoryDescription,
-					visibility: inputRepositoryPublic ? 'public' : 'private'
-				});
-			} else {
-				await client.repos.createUsingTemplate({
-					template_owner: organization,
-					template_repo: '2223-DI000-TemplateRepo',
-					owner: organization,
-					name: repositoryName,
-					description: repositoryDescription,
-					private: !inputRepositoryPublic
-				});
-			}
+			const data: GenerateScaffoldedProjectData = {
+				repositoryName,
+				repositoryDescription,
+				repositoryOrganization: organization,
+				repositoryVisibility: inputRepositoryPublic ? 'public' : 'private',
+				repostoryMembers: teamMembers.map((member) => member.login),
+				repositoryTemplate: inputTemplate === 'None' ? undefined : inputTemplate
+			};
 
-			await client.teams.create({
-				org: organization,
-				name: repositoryName,
-				privacy: 'closed',
-				repo_names: [`${organization}/${repositoryName}`]
+			const response = await fetch('/api/generate-scaffolded-project', {
+				method: 'POST',
+				body: JSON.stringify(data),
+				headers: {
+					'Content-Type': 'application/json'
+				}
 			});
 
-			await client.teams.addOrUpdateRepoPermissionsInOrg({
-				org: organization,
-				owner: organization,
-				repo: repositoryName,
-				team_slug: repositoryName,
-				permission: 'push'
-			});
-
-			for (const teamMember of teamMembers) {
-				await client.teams.addOrUpdateMembershipForUserInOrg({
-					org: organization,
-					team_slug: repositoryName,
-					username: teamMember?.node?.login || '',
-					role: 'member'
-				});
-			}
-
-			success = true;
+			success = response.ok;
 		} catch (err) {
 			if (err instanceof Error) {
 				error = err.message;
@@ -220,7 +201,7 @@
 					<select class="select select-bordered" id="templateRepository" bind:value={inputTemplate}>
 						<option selected>None</option>
 						{#each gitHubOrganizationTemplateRepositories as repo}
-							<option>{repo?.node?.name}</option>
+							<option>{repo.name}</option>
 						{/each}
 					</select>
 					<label class="label" for="templateRepository">
@@ -246,27 +227,27 @@
 			<form on:submit={submitNext}>
 				<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
 					<span class="label label-text col-span-full">Who should have access?</span>
-					{#each gitHubOrganizationMembers as member}
+					{#each $gitHubOrganizationMembers as member}
 						<div class="form-control">
 							<label class="label cursor-pointer">
 								<div class="flex flex-row gap-4 items-center">
-									<img src={member?.node?.avatarUrl} alt={member?.node?.login} class="h-10" />
+									<img src={member.avatar_url} alt={member.login} class="h-10" />
 									<div class="flex flex-col justify-center">
-										{#if member?.node?.name}
-											<span>{member?.node?.name}</span>
+										{#if member.name}
+											<span>{member.name}</span>
 										{/if}
 										<a
 											class="label-text"
-											href={member?.node?.url}
+											href={member.url}
 											target="_blank"
-											rel="noopener noreferrer">{member?.node?.login}</a
+											rel="noopener noreferrer">{member.login}</a
 										>
 									</div>
 								</div>
 								<input
 									type="checkbox"
 									class="toggle"
-									bind:checked={inputTeamMembers[member?.node?.login || '']}
+									bind:checked={inputTeamMembers[member.login || '']}
 								/>
 							</label>
 						</div>
@@ -301,12 +282,9 @@
 						<span class="block font-bold col-span-full">Repository access:</span>
 						{#each teamMembers as member}
 							<div class="flex flex-row gap-4 items-center">
-								<img src={member?.node?.avatarUrl} alt={member?.node?.login} class="h-10" />
-								<a
-									class="label-text"
-									href={member?.node?.url}
-									target="_blank"
-									rel="noopener noreferrer">{member?.node?.login}</a
+								<img src={member.avatar_url} alt={member.login} class="h-10" />
+								<a class="label-text" href={member.url} target="_blank" rel="noopener noreferrer"
+									>{member.login}</a
 								>
 							</div>
 						{/each}

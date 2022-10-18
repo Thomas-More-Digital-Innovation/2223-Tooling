@@ -6,7 +6,9 @@ declare namespace App {
 	// interface PageData {}
 	// interface Error {}
 	interface Platform {
-		env: {};
+		env: {
+			GH_TOKEN: string;
+		};
 		context: {};
 		caches: CacheStorage & { default: Cache };
 	}
