@@ -1,6 +1,18 @@
 import { ICommand } from "./ICommand";
-import { APIEmbed, ApplicationCommandOptionType, ApplicationCommandType } from "discord-api-types/v10";
+import { APIEmbed, APIUser, ApplicationCommandOptionType, ApplicationCommandType, CDNRoutes, ImageFormat, RouteBases, Routes } from "discord-api-types/v10";
 
+async function getUser(url: string, token: string) : Promise<APIUser> {
+   const response = await fetch(url, {
+     headers: {
+       'Content-Type': 'application/json',
+       Authorization: `Bot ${token}`,
+     },
+     method: 'GET',
+     
+   });
+
+   return await response.json();
+ }
 export const KeyCommand: ICommand = {
    definition: {
       name: "key",
@@ -18,8 +30,8 @@ export const KeyCommand: ICommand = {
       }
       ],
    },
-// run the command when it is called by the user in discord  
-   handler: async (interaction) => {
+ 
+   handler: async (interaction, env) => {
       let userId = null;
       let commandName = ""
       if (interaction.data.type === ApplicationCommandType.ChatInput) {
@@ -35,7 +47,10 @@ export const KeyCommand: ICommand = {
       if (userId === null) {
          userId = interaction.member?.user.id
       }
-      
+      const user = await getUser(RouteBases.api + Routes.user(userId), env.DISCORD_TOKEN);
+
+      console.log(user)
+
       if (commandName == 'take') {
          const embed: APIEmbed = {
             title: "Someone took the key",
@@ -59,7 +74,7 @@ export const KeyCommand: ICommand = {
 
             ],
             thumbnail: {
-               url: "https://imgur.com/QX6O7af.jpg"
+               url: RouteBases.cdn + CDNRoutes.userAvatar(user.id, user.avatar || "", user.avatar?.slice(0, 2) === 'a_' ? ImageFormat.GIF : ImageFormat.PNG)
             },
             footer: {
                text: "Kind regards, \nYour Dino waitress",
@@ -91,7 +106,7 @@ export const KeyCommand: ICommand = {
             },
             ],
             thumbnail: {
-               url: `${userId}`
+               url: RouteBases.cdn + CDNRoutes.userAvatar(user.id, user.avatar || "", user.avatar?.slice(0, 1) === 'a_' ? ImageFormat.GIF : ImageFormat.PNG)
             },
             footer: {
                text: "Kind regards, \nYour Dino waitress",

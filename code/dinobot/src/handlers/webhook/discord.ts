@@ -5,6 +5,7 @@ import { ICommand } from "./commands/ICommand";
 import { UserCommand } from "./commands/UserCommand";
 import { CoffeeCommand } from "./commands/CoffeeCommand";
 import { KeyCommand } from "./commands/KeyCommand";
+import { ProjectCommand } from "./commands/ProjectCommand";
 
 export const registeredCommands: {[key: string]: ICommand} = {};
 
@@ -12,6 +13,7 @@ export const registeredCommands: {[key: string]: ICommand} = {};
 registeredCommands[UserCommand.definition.name.toLowerCase()] = UserCommand;
 registeredCommands[CoffeeCommand.definition.name.toLowerCase()] = CoffeeCommand;
 registeredCommands[KeyCommand.definition.name.toLowerCase()] = KeyCommand;
+registeredCommands[ProjectCommand.definition.name.toLowerCase()] = ProjectCommand;
 
 class JsonResponse extends Response {
     constructor(body: APIInteractionResponse, init?: any) {
