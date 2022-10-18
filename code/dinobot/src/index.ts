@@ -19,7 +19,7 @@ export interface Env {
 	DISCORD_TOKEN: string;
 	DISCORD_PUBLIC_KEY: string;
 	DISCORD_APPLICATION_ID: string;
-
+	GITHUB_WEBHOOK_SECRET: string;
 	COFFEE_COUNTER_WORKER?: ServiceWorkerGlobalScope;
 
 	// Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
@@ -79,7 +79,7 @@ export default {
 			const body = await request.json();
 
 			const webhook = new Webhooks({
-				secret: "mysecret",
+				secret: env.GITHUB_WEBHOOK_SECRET,
 			});
 			webhook.on("team.created", async event => {
 				async function teamCreated(url: string, token: string, channelCreate: RESTPostAPIGuildChannelJSONBody): Promise<APITextBasedChannel<ChannelType.GuildText>> {
