@@ -1,22 +1,7 @@
-import { ApolloClient, InMemoryCache, gql } from '@apollo/client/core/index';
-import { settingStore } from './settingStore';
+import { Octokit } from '@octokit/rest';
 
-let client = new ApolloClient({
-	uri: 'https://api.github.com/graphql',
-	headers: {
-		authorization: `Bearer ${''}`
-	},
-	cache: new InMemoryCache()
-});
-
-settingStore.subscribe((newValue) => {
-	client = new ApolloClient({
-		uri: 'https://api.github.com/graphql',
-		headers: {
-			authorization: `Bearer ${newValue.GitHubPersonalAccessToken}`
-		},
-		cache: new InMemoryCache()
+export const getGitHubClient = (token: string) =>
+	new Octokit({
+		auth: token,
+		userAgent: 'DigitalInnovationTooling v1.0.0'
 	});
-});
-
-export default client;
