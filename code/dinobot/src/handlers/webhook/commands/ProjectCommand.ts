@@ -21,13 +21,13 @@ export const ProjectCommand: ICommand = {
       const channel = await getCategory(RouteBases.api + Routes.channel(interaction.channel_id), env.DISCORD_TOKEN);
       console.log(channel);
 
-      if (channel?.parent_id != "1031539075582275624") {
+      if (channel?.parent_id != "889489685183856641") {
          return {
             content: "Something went wrong"
          }
       }
       return {
-         content: `https://github.com/This-Is-a-Test-Org-For-webhookbot/${channel?.name}`
+         content: `https://github.com/Thomas-More-Digital-Innovation/${channel?.name}`
       }
    }
 }
