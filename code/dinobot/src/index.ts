@@ -19,9 +19,8 @@ export interface Env {
 	DISCORD_TOKEN: string;
 	DISCORD_PUBLIC_KEY: string;
 	DISCORD_APPLICATION_ID: string;
-
+	GITHUB_WEBHOOK_SECRET: string;
 	COFFEE_COUNTER_WORKER?: ServiceWorkerGlobalScope;
-
 	// Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
 	// MY_KV_NAMESPACE: KVNamespace;
 	//
@@ -79,7 +78,7 @@ export default {
 			const body = await request.json();
 
 			const webhook = new Webhooks({
-				secret: "mysecret",
+				secret: env.GITHUB_WEBHOOK_SECRET,
 			});
 			webhook.on("team.created", async event => {
 				async function teamCreated(url: string, token: string, channelCreate: RESTPostAPIGuildChannelJSONBody): Promise<APITextBasedChannel<ChannelType.GuildText>> {
@@ -99,10 +98,10 @@ export default {
 				const channelCreate: RESTPostAPIGuildChannelJSONBody = {
 					name: `${event.payload.team.name}`,
 					type: 0,
-					parent_id: "1031539075582275624",
+					parent_id: "889489685183856641",
 
 				};
-				const message = await teamCreated(RouteBases.api + Routes.guildChannels("1030526991788679218"), env.DISCORD_TOKEN, channelCreate);
+				const message = await teamCreated(RouteBases.api + Routes.guildChannels("889485898847232020"), env.DISCORD_TOKEN, channelCreate);
 
 				async function teamMessage(url: string, token: string, sendMessage: RESTPostAPIChannelMessageJSONBody) {
 					const response = await fetch(url, {
