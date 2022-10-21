@@ -19,7 +19,7 @@ export const ProjectCommand: ICommand = {
     },
     handler: async (interaction, env) => {
       const channel = await getCategory(RouteBases.api + Routes.channel(interaction.channel_id), env.DISCORD_TOKEN);
-      console.log(channel);
+      // console.log(channel);
 
       if (channel?.parent_id != "889489685183856641") {
          return {

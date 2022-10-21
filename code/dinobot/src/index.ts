@@ -1,5 +1,5 @@
 import { Webhooks } from '@octokit/webhooks';
-import { APITextBasedChannel, ChannelType, RESTPostAPIChannelMessageJSONBody, RESTPostAPIGuildChannelJSONBody, RouteBases, Routes } from 'discord-api-types/v10';
+import { APIChannel, APIEmbed, APIGuildChannel, APIGuildTextChannel, APITextBasedChannel, ChannelType, GuildTextChannelType, RESTGetAPIGuildChannelsResult, RESTPostAPIChannelMessageJSONBody, RESTPostAPIGuildChannelJSONBody, RouteBases, Routes } from 'discord-api-types/v10';
 import { verifyKey } from 'discord-interactions';
 import { Request as IttyRequest, Router } from 'itty-router';
 import { registerDiscordHandler } from './handlers/register/discord';
@@ -118,6 +118,69 @@ export default {
 					content: `https://github.com/${event.payload.organization.login}/${event.payload.team.name}`,
 				};
 				await teamMessage(RouteBases.api + Routes.channelMessages(message.id), env.DISCORD_TOKEN, sendMessage);
+			});
+
+
+
+
+			webhook.on("pull_request.opened", async event => {
+				async function getChannel(url: string, token: string): Promise<APIGuildChannel<ChannelType.GuildText>[]> {
+					const response = await fetch(url, {
+						headers: {
+							'Content-Type': 'application/json',
+							Authorization: `Bot ${token}`,
+						},
+						method: 'GET',
+					});
+
+					return await response.json();
+				}
+				// console.log(event.payload.pull_request)
+
+				const channels = await getChannel(RouteBases.api + Routes.guildChannels("889485898847232020"), env.DISCORD_TOKEN);
+				console.log(channels)
+				
+				const channelName: any = channels.find(channel => {
+					return channel.name === `${event.payload.pull_request.head.repo.name}`
+				});
+
+				console.log(channelName)
+
+				async function pullMessage(url: string, token: string, sendPullMessage: RESTPostAPIChannelMessageJSONBody) {
+					const response = await fetch(url, {
+						headers: {
+							'Content-Type': 'application/json',
+							Authorization: `Bot ${token}`,
+						},
+						method: 'POST',
+						body: JSON.stringify(sendPullMessage),
+					});
+					return response;
+				} 
+
+				const embed: APIEmbed = {
+					title: `${event.payload.pull_request.title} by ${event.payload.pull_request.user.login} · Pull Request #${event.payload.pull_request.number} · ${event.payload.pull_request.head.repo.full_name}`,
+					color: 0xd2a575,
+					url: `${event.payload.pull_request.html_url}`,
+					author: {
+						 name: "Github",
+					},
+					thumbnail: {
+						 url: `https://opengraph.githubassets.com/${event.payload.pull_request.base.sha}/${event.payload.pull_request.head.repo.full_name}/pull/${event.payload.pull_request.number}`,
+					},
+					footer: {
+						 text: "Designed By Nick",
+						 icon_url: "https://avatars.githubusercontent.com/u/91118370?v=4"
+					},
+					timestamp: new Date().toISOString()
+			  }
+	
+				const sendPullMessage: RESTPostAPIChannelMessageJSONBody = {
+					content: `A new pull request has arrived! (#${event.payload.pull_request.number})\nYou can find it here: ${event.payload.pull_request.html_url}`,
+					embeds: [embed],
+				};
+				
+				await pullMessage(RouteBases.api + Routes.channelMessages(channelName?.id), env.DISCORD_TOKEN, sendPullMessage);
 			});
 
 			await webhook.verifyAndReceive({
