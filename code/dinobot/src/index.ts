@@ -163,7 +163,7 @@ export default {
 					color: 0xd2a575,
 					url: `${event.payload.pull_request.html_url}`,
 					author: {
-						 name: "Github",
+						 name: "GitHub",
 					},
 					thumbnail: {
 						 url: `https://opengraph.githubassets.com/${event.payload.pull_request.base.sha}/${event.payload.pull_request.head.repo.full_name}/pull/${event.payload.pull_request.number}`,
