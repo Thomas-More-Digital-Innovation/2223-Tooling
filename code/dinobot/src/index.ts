@@ -141,7 +141,7 @@ export default {
 				console.log(channels)
 				
 				const channelName: any = channels.find(channel => {
-					return channel.name === `${event.payload.pull_request.head.repo.name}`
+					return channel.name === `${event.payload.pull_request.head.repo.name.toLowerCase()}`
 				});
 
 				console.log(channelName)
