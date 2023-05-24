@@ -88,7 +88,7 @@ export const KeyCommand: ICommand = {
          const embed: APIEmbed = {
             title: "Someone returned the key",
             color: 0xd2a575,
-            description: "Someone returned the key and registered this with the waitress.",
+            description: `<@${userId}>returned the key and registered this with the waitress.`,
             author: {
                name: "Designed by Nick",
                icon_url: "https://avatars.githubusercontent.com/u/91118370?v=4",
